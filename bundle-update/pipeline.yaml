@@ -1,0 +1,78 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: update-bundle-related-images
+spec:
+  params:
+    - name: snapshot
+      type: string
+    - name: release
+      type: string
+  tasks:
+    - name: clone-repo
+      taskSpec:
+        params:
+          - name: url
+            type: string
+          - name: branch
+            type: string
+        steps:
+          - name: git-clone
+            image: alpine/git
+            script: |
+              git clone --single-branch --branch main $(params.url) repo
+              cd repo
+              git checkout -b $(params.branch)
+      params:
+        - name: url
+          value: "https://github.com/raptorsun/lightspeed-operator.git"
+        - name: branch
+          value: "bundle-update"
+      workspaces:
+        - name: output
+    - name: update-related-images
+      runAfter:
+        - clone-repo
+      taskSpec:
+        params:
+          - name: snapshot
+            type: string
+        steps:
+          - name: update-file
+            image: alpine
+            script: |
+              echo "$(params.snapshot)" > repo/related_images
+      params:
+        - name: snapshot
+          value: "$(params.snapshot)"
+      workspaces:
+        - name: output
+    - name: commit-and-push
+      runAfter:
+        - update-related-images
+      taskSpec:
+        params:
+          - name: snapshot
+            type: string
+        steps:
+          - name: git-config
+            image: alpine/git
+            script: |
+              cd repo
+              git config user.email "hasun@redhat.com"
+              git config user.name "Haoyu Sun's Bot"
+          - name: git-commit-push
+            image: alpine/git
+            script: |
+              cd repo
+              git add related_images
+              git commit -m "Update related_images with snapshot $(params.snapshot)"
+              git log
+              # git push origin bundle-update
+      workspaces:
+        - name: output
+      params:
+        - name: snapshot
+          value: "$(params.snapshot)"
+  workspaces:
+    - name: output
