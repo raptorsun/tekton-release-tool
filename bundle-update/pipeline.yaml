@@ -29,7 +29,7 @@ spec:
         - name: branch
           value: "bundle-update"
       workspaces:
-        - name: output
+        - name: source
     - name: update-related-images
       runAfter:
         - clone-repo
@@ -41,12 +41,13 @@ spec:
           - name: update-file
             image: alpine
             script: |
+              ls
               echo "$(params.snapshot)" > repo/related_images
       params:
         - name: snapshot
           value: "$(params.snapshot)"
       workspaces:
-        - name: output
+        - name: source
     - name: commit-and-push
       runAfter:
         - update-related-images
@@ -70,9 +71,9 @@ spec:
               git log
               # git push origin bundle-update
       workspaces:
-        - name: output
+        - name: source
       params:
         - name: snapshot
           value: "$(params.snapshot)"
   workspaces:
-    - name: output
+    - name: source
