@@ -16,6 +16,7 @@ spec:
             type: string
           - name: branch
             type: string
+        workingDir: /workspace/source
         steps:
           - name: git-clone
             image: alpine/git
@@ -23,6 +24,9 @@ spec:
               git clone --single-branch --branch main $(params.url) repo
               cd repo
               git checkout -b $(params.branch)
+        results:
+          - name: branch-name
+            description: The name of the branch created
       params:
         - name: url
           value: "https://github.com/raptorsun/lightspeed-operator.git"
@@ -37,6 +41,7 @@ spec:
         params:
           - name: snapshot
             type: string
+        workingDir: /workspace/source
         steps:
           - name: update-file
             image: alpine
@@ -55,6 +60,7 @@ spec:
         params:
           - name: snapshot
             type: string
+        workingDir: /workspace/source
         steps:
           - name: git-config
             image: alpine/git
