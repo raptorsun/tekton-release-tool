@@ -1,0 +1,32 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-bot
+  namespace: crt-nshift-lightspeed-tenant
+rules:
+  - apiGroups:
+      - appstudio.redhat.com
+    resources:
+      - releases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+  - apiGroups:
+      - tekton.dev
+    resources:
+      - pipelineruns
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+  - apiGroups:
+      - appstudio.redhat.com
+    resources:
+      - snapshots
+    verbs:
+      - get
+      - list
+      - watch
