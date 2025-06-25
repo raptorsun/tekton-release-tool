@@ -22,6 +22,8 @@ spec:
             type: string
           - name: branch
             type: string
+          - name: snapshot
+            type: string
         steps:
           - name: git-clone
             image: alpine/git
@@ -46,20 +48,29 @@ spec:
           - name: git-commit-push
             image: alpine/git
             workingDir: /workspace/source
+            env:
+              - name: GITHUB_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: release-bot-github-token
+                    key: github-token
             script: |
               cd repo
               git add related_images
               git commit -m "Update related_images with snapshot $(params.snapshot)"
-              git log
-              # git push origin bundle-update
+              git rev-parse HEAD | tee $(results.commit-id.path)
+              git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
+              git push origin $(params.branch)
         results:
-          - name: branch-name
-            description: The name of the branch created
+          - name: commit-id
+            description: The commit ID where bundle is updated
       params:
         - name: url
           value: $(params.url)
         - name: branch
           value: $(params.branch)
+        - name: snapshot
+          value: $(params.snapshot)
       workspaces:
         - name: source
   workspaces:
