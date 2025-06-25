@@ -70,6 +70,7 @@ spec:
             workingDir: /workspace/source
           - name: git-commit-push
             image: alpine/git
+            workingDir: /workspace/source
             script: |
               cd repo
               git add related_images
