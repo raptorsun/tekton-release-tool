@@ -15,7 +15,7 @@ spec:
       type: string
       default: "bundle-update"
   tasks:
-    - name: clone-repo
+    - name: update-related-images
       taskSpec:
         params:
           - name: url
@@ -60,7 +60,7 @@ spec:
               git commit -m "Update related_images with snapshot $(params.snapshot)"
               git rev-parse HEAD | tee $(results.commit-id.path)
               git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
-              git push origin $(params.branch)
+              git push --force origin $(params.branch)
         results:
           - name: commit-id
             description: The commit ID where bundle is updated
