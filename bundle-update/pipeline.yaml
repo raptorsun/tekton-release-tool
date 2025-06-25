@@ -16,7 +16,6 @@ spec:
             type: string
           - name: branch
             type: string
-        workingDir: /workspace/source
         steps:
           - name: git-clone
             image: alpine/git
@@ -24,6 +23,7 @@ spec:
               git clone --single-branch --branch main $(params.url) repo
               cd repo
               git checkout -b $(params.branch)
+            workingDir: /workspace/source
         results:
           - name: branch-name
             description: The name of the branch created
@@ -41,13 +41,13 @@ spec:
         params:
           - name: snapshot
             type: string
-        workingDir: /workspace/source
         steps:
           - name: update-file
             image: alpine
             script: |
               ls
               echo "$(params.snapshot)" > repo/related_images
+            workingDir: /workspace/source
       params:
         - name: snapshot
           value: "$(params.snapshot)"
@@ -60,7 +60,6 @@ spec:
         params:
           - name: snapshot
             type: string
-        workingDir: /workspace/source
         steps:
           - name: git-config
             image: alpine/git
@@ -68,6 +67,7 @@ spec:
               cd repo
               git config user.email "hasun@redhat.com"
               git config user.name "Haoyu Sun's Bot"
+            workingDir: /workspace/source
           - name: git-commit-push
             image: alpine/git
             script: |
