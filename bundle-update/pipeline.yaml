@@ -61,13 +61,9 @@ spec:
               git rev-parse HEAD | tee $(results.commit-id.path)
               git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
               git push --force origin $(params.branch)
-            results:
-              - name: commit-id
-                description: The commit ID where bundle is updated
         results:
           - name: commit-id
             description: The commit ID where bundle is updated
-            value: "$(steps.git-commit-push.results.commit-id)"
       params:
         - name: url
           value: $(params.url)
