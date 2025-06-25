@@ -83,4 +83,3 @@ spec:
     - name: commit-id
       description: The commit ID where bundle is updated
       value: "$(tasks.update-related-images.results.commit-id)"
-  timeout: "1h0m0s"
