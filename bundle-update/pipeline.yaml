@@ -31,7 +31,7 @@ spec:
             image: alpine/git
             script: |
               # todo: remove the hardcoded branch
-              git clone --single-branch --branch image-tool-update $(params.gitUrl) repo
+              git clone --single-branch --branch main $(params.gitUrl) repo
               cd repo
               git checkout -b $(params.branch)
             workingDir: /workspace/source
