@@ -57,7 +57,7 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     name: release-bot-konflux-token
-                    key: github-token
+                    key: konflux-token
           - name: git-config
             image: alpine/git
             script: |
