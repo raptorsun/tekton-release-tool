@@ -36,21 +36,24 @@ spec:
             workingDir: /workspace/source
           - name: update-file
             image: registry.access.redhat.com/ubi9/ubi-minimal
+            securityContext:
+              runAsUser: 0
             script: |
+              export HOME=/tmp
               microdnf install -y tar jq
               curl -L -o oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.19/openshift-client-linux-amd64-rhel9.tar.gz \
                   && tar -xvzf oc.tar.gz \
                   && chmod +x kubectl oc \
                   && mv oc kubectl /usr/local/bin/
+              oc login --token=$(KONFLUX_TOKEN) --server=https://api.stone-prd-rh01.pg1f.p1.openshiftapps.com:6443
               oc version
               IFS='/' read -r RELEASE_NAMESPACE RELEASE_NAME <<< "$(params.release)"
-              RELEASE_CONDITIONS=$(kubectl get release "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" \
+              RELEASE_CONDITIONS=$(oc get release "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" \
               -o jsonpath='{.status.conditions}' | jq '.[] | select(.type == "ManagedPipelineProcessed")')
               echo "Release conditions: $RELEASE_CONDITIONS"
-              SNAPSHOT_IMAGES=$(kubectl get snapshot "$(params.snapshot)" -n "$RELEASE_NAMESPACE" \
+              SNAPSHOT_IMAGES=$(oc get snapshot "$(params.snapshot)" -n "$RELEASE_NAMESPACE" \
               -o jsonpath='{.spec.components}')
               echo "Snapshot images: $SNAPSHOT_IMAGES"
-              
 
             workingDir: /workspace/source
             env:
