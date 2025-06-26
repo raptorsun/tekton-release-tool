@@ -8,7 +8,7 @@ spec:
       type: string
     - name: release
       type: string
-    - name: url
+    - name: gitUrl
       type: string
       default: "https://github.com/raptorsun/lightspeed-operator.git"
     - name: branch
@@ -18,26 +18,46 @@ spec:
     - name: update-related-images
       taskSpec:
         params:
-          - name: url
+          - name: gitUrl
             type: string
           - name: branch
             type: string
           - name: snapshot
             type: string
+          - name: release
+            type: string
         steps:
           - name: git-clone
             image: alpine/git
             script: |
-              git clone --single-branch --branch main $(params.url) repo
+              git clone --single-branch --branch main $(params.gitUrl) repo
               cd repo
               git checkout -b $(params.branch)
             workingDir: /workspace/source
           - name: update-file
-            image: alpine
+            image: registry.access.redhat.com/ubi9/ubi-minimal
             script: |
-              ls
-              echo "$(params.snapshot)" > repo/related_images
+              curl -L -o oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest-4.19/openshift-client-linux-amd64-rhel9.tar.gz \
+                  && tar -xvzf oc.tar.gz \
+                  && chmod +x kubectl oc \
+                  && mv oc kubectl /usr/local/bin/
+              oc version
+              IFS='/' read -r RELEASE_NAMESPACE RELEASE_NAME <<< "$(params.release)"
+              RELEASE_CONDITIONS=$(kubectl get release "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" \
+              -o jsonpath='{.status.conditions}' | jq '.[] | select(.type == "ManagedPipelineProcessed")')
+              echo "Release conditions: $RELEASE_CONDITIONS"
+              SNAPSHOT_IMAGES=$(kubectl get snapshot "$(params.snapshot)" -n "$RELEASE_NAMESPACE" \
+              -o jsonpath='{.spec.components}')
+              echo "Snapshot images: $SNAPSHOT_IMAGES"
+              
+
             workingDir: /workspace/source
+            env:
+              - name: KONFLUX_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: release-bot-konflux-token
+                    key: github-token
           - name: git-config
             image: alpine/git
             script: |
@@ -65,12 +85,14 @@ spec:
           - name: commit-id
             description: The commit ID where bundle is updated
       params:
-        - name: url
-          value: $(params.url)
+        - name: gitUrl
+          value: $(params.gitUrl)
         - name: branch
           value: $(params.branch)
         - name: snapshot
           value: $(params.snapshot)
+        - name: release
+          value: $(params.release)
       workspaces:
         - name: source
   workspaces:
