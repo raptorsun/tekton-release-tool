@@ -30,7 +30,8 @@ spec:
           - name: git-clone
             image: alpine/git
             script: |
-              git clone --single-branch --branch main $(params.gitUrl) repo
+              # todo: remove the hardcoded branch
+              git clone --single-branch --branch image-tool-update $(params.gitUrl) repo
               cd repo
               git checkout -b $(params.branch)
             workingDir: /workspace/source
