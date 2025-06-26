@@ -87,16 +87,20 @@ spec:
               git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
               git push --force origin $(params.branch)
               # todo: remove the hardcoded PR title, body, and head fork name
-              curl -L \
+              RESPONSE=$(curl -L \
                 -X POST \
                 -H "Accept: application/vnd.github+json" \
                 -H "Authorization: Bearer ${GITHUB_TOKEN}" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 https://api.github.com/repos/openshift/lightspeed-operator/pulls \
-                -d '{"title":"[Do Not Merge] Test Konflux Bundle Update Snapshot $(params.snapshot)","body":"Do not merge!","head":"raptorsun:$(params.branch)","base":"main"}'
+                -d '{"title":"[Do Not Merge] Test Konflux Bundle Update Snapshot $(params.snapshot)","body":"Do not merge!","head":"raptorsun:$(params.branch)","base":"main"}' )
+              echo "Github response: \n $RESPONSE"
+              jq -r '.html_url' <<< $RESPONSE | tee $(results.pull-request-url.path)
         results:
           - name: commit-id
             description: The commit ID where bundle is updated
+          - name: pull-request-url
+            description: The URL of the created pull request
       params:
         - name: gitUrl
           value: $(params.gitUrl)
@@ -114,3 +118,6 @@ spec:
     - name: commit-id
       description: The commit ID where bundle is updated
       value: "$(tasks.update-related-images.results.commit-id)"
+    - name: pull-request-url
+      description: The URL of the created pull request
+      value: "$(tasks.update-related-images.results.pull-request-url)"
