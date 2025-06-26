@@ -39,13 +39,12 @@ spec:
             script: |
               oc login --token=${KONFLUX_TOKEN} --server=https://api.stone-prd-rh01.pg1f.p1.openshiftapps.com:6443
               IFS='/' read -r RELEASE_NAMESPACE RELEASE_NAME <<< "$(params.release)"
-              RELEASE_CONDITIONS=$(oc get release "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" \
-              -o jsonpath='{.status.conditions}' | jq '.[] | select(.type == "ManagedPipelineProcessed")')
-              echo "Release conditions: $RELEASE_CONDITIONS"
               SNAPSHOT_IMAGES=$(oc get snapshot "$(params.snapshot)" -n "$RELEASE_NAMESPACE" \
               -o jsonpath='{.spec.components}')
               echo "Snapshot images: $SNAPSHOT_IMAGES"
-
+              cd repo
+              # todo: remove the hardcoded bundle reference
+              ./hack/snapshot_to_image_list.sh -s "$(params.snapshot)" -b ols-bundle-8k8gd -r stable -o related_images.json
             workingDir: /workspace/source
             env:
               - name: KONFLUX_TOKEN
