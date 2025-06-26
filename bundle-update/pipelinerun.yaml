@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: update-bundle-related-images-run-16
+  namespace: crt-nshift-lightspeed-tenant
+spec:
+  serviceAccountName: release-bot
+  pipelineRef:
+    params:
+      - name: url
+        value: https://github.com/raptorsun/tekton-release-tool.git
+      - name: revision
+        value: main
+      - name: pathInRepo
+        value: bundle-update/pipeline.yaml
+    resolver: git
+  params:
+    - name: snapshot
+      value: "ols-dsz4g"
+    - name: release
+      value: "crt-nshift-lightspeed-tenant/ga-1.0.0-1"
+    - name: gitUrl
+      value: "https://github.com/raptorsun/lightspeed-operator.git"
+    - name: branch
+      value: "bundle-update-1"
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi

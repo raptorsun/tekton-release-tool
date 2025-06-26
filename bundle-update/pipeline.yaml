@@ -28,7 +28,7 @@ spec:
             type: string
         steps:
           - name: git-clone
-            image: alpine/git
+            image: docker.io/raptorsun/bundle-update:0.0.1
             script: |
               # todo: remove the hardcoded branch
               git clone --single-branch --branch main $(params.gitUrl) repo
@@ -59,7 +59,7 @@ spec:
               - name: HOME
                 value: /workspace/source
           - name: git-config
-            image: alpine/git
+            image: docker.io/raptorsun/bundle-update:0.0.1
             script: |
               cd repo
               git config user.email "hasun@redhat.com"
@@ -69,7 +69,7 @@ spec:
               - name: HOME
                 value: /workspace/source
           - name: git-commit-push
-            image: alpine/git
+            image: docker.io/raptorsun/bundle-update:0.0.1
             workingDir: /workspace/source
             env:
               - name: GITHUB_TOKEN
