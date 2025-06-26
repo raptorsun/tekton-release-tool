@@ -53,6 +53,8 @@ spec:
                   secretKeyRef:
                     name: release-bot-konflux-token
                     key: konflux-token
+              - name: HOME
+                value: /workspace/source
           - name: git-config
             image: alpine/git
             script: |
