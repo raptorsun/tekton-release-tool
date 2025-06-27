@@ -68,7 +68,6 @@ spec:
           - name: git-clone
             image: docker.io/raptorsun/catalog-update:0.0.1
             script: |
-              # todo: remove the hardcoded branch
               git clone --single-branch --branch $(params.sourceBranch) $(params.sourceGitUrl) repo
               cd repo
               git checkout -b $(params.forkBranch)
