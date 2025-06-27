@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: update-bundle-related-images-run-16
+  name: update-bundle-related-images-run-1
   namespace: crt-nshift-lightspeed-tenant
 spec:
   serviceAccountName: release-bot
@@ -19,9 +19,11 @@ spec:
       value: "ols-dsz4g"
     - name: release
       value: "crt-nshift-lightspeed-tenant/ga-1.0.0-1"
-    - name: gitUrl
+    - name: releasePlan
+      value: "ols-release-plan"
+    - name: forkGitUrl
       value: "https://github.com/raptorsun/lightspeed-operator.git"
-    - name: branch
+    - name: forkBranch
       value: "bundle-update-1"
   workspaces:
     - name: source
