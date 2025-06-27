@@ -6,34 +6,70 @@ spec:
   params:
     - name: snapshot
       type: string
+      description: The bundle snapshot to update the catalog with. Provided by Konflux.
     - name: release
       type: string
-    - name: gitUrl
+      description: The release name and namespace in the format of <namespace>/<release-name>. Provided by Konflux.
+    - name: releasePlan
       type: string
+      description: The release plan name, which is not used in this pipeline. Provided by Konflux.
+    - name: forkGitUrl
+      type: string
+      description: The git repository URL where the updated catalog is committed to
       default: "https://github.com/raptorsun/lightspeed-operator.git"
-    - name: branch
+    - name: forkBranch
       type: string
+      description: The branch of the git repository where the updated catalog is committed to
       default: "bundle-update"
+    - name: forkUser
+      type: string
+      description: The Github user of the fork git repository
+      default: "raptorsun"
+    - name: sourceGitUrl
+      type: string
+      description: The source git repository URL to clone as starting point for the catalog update
+      default: "https://github.com/openshift/lightspeed-operator.git"
+    - name: sourceBranch
+      type: string
+      description: The branch of the source git repository to clone as starting point for the catalog update
+      default: "main"
   tasks:
     - name: update-related-images
       taskSpec:
         params:
-          - name: gitUrl
-            type: string
-          - name: branch
-            type: string
           - name: snapshot
             type: string
+            description: The bundle snapshot to update the catalog with. Provided by Konflux.
           - name: release
             type: string
+            description: The release name and namespace in the format of <namespace>/<release-name>. Provided by Konflux.
+          - name: forkGitUrl
+            type: string
+            description: The git repository URL where the updated catalog is committed to
+            default: "https://github.com/raptorsun/lightspeed-operator.git"
+          - name: forkBranch
+            type: string
+            description: The branch of the git repository where the updated catalog is committed to
+            default: "bundle-update"
+          - name: forkUser
+            type: string
+            description: The Github user of the fork git repository
+            default: "raptorsun"
+          - name: sourceGitUrl
+            type: string
+            description: The source git repository URL to clone as starting point for the catalog update
+            default: "https://github.com/openshift/lightspeed-operator.git"
+          - name: sourceBranch
+            type: string
+            description: The branch of the source git repository to clone as starting point for the catalog update
+            default: "main"
         steps:
           - name: git-clone
             image: docker.io/raptorsun/bundle-update:0.0.1
             script: |
-              # todo: remove the hardcoded branch
-              git clone --single-branch --branch main $(params.gitUrl) repo
+              git clone --single-branch --branch $(params.sourceBranch) $(params.sourceGitUrl) repo
               cd repo
-              git checkout -b $(params.branch)
+              git checkout -b $(params.forkBranch)
             workingDir: /workspace/source
             env:
               - name: HOME
@@ -41,14 +77,14 @@ spec:
           - name: update-file
             image: docker.io/raptorsun/bundle-update:0.0.1
             script: |
+              set -e
               oc login --token=${KONFLUX_TOKEN} --server=https://api.stone-prd-rh01.pg1f.p1.openshiftapps.com:6443
               IFS='/' read -r RELEASE_NAMESPACE RELEASE_NAME <<< "$(params.release)"
               SNAPSHOT_IMAGES=$(oc get snapshot "$(params.snapshot)" -n "$RELEASE_NAMESPACE" \
               -o jsonpath='{.spec.components}')
               echo "Snapshot images: $SNAPSHOT_IMAGES"
               cd repo
-              # todo: remove the hardcoded bundle reference
-              ./hack/snapshot_to_image_list.sh -s "$(params.snapshot)" -b ols-bundle-8k8gd -r stable -o related_images.json
+              ./hack/snapshot_to_image_list.sh -s "$(params.snapshot)" -r stable -o related_images.json
             workingDir: /workspace/source
             env:
               - name: KONFLUX_TOKEN
@@ -62,8 +98,10 @@ spec:
             image: docker.io/raptorsun/bundle-update:0.0.1
             script: |
               cd repo
+              # todo: replace the email and name with the bot's email and name
               git config user.email "hasun@redhat.com"
               git config user.name "Haoyu Sun's Bot"
+              git remote add fork $(params.forkGitUrl)
             workingDir: /workspace/source
             env:
               - name: HOME
@@ -85,15 +123,15 @@ spec:
               git commit -m "Update related_images with snapshot $(params.snapshot)"
               git rev-parse HEAD | tee $(results.commit-id.path)
               git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
-              git push --force origin $(params.branch)
-              # todo: remove the hardcoded PR title, body, and head fork name
+              git push --force fork $(params.forkBranch)
+              # todo: replace the PR title, body
               RESPONSE=$(curl -L \
                 -X POST \
                 -H "Accept: application/vnd.github+json" \
                 -H "Authorization: Bearer ${GITHUB_TOKEN}" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
                 https://api.github.com/repos/openshift/lightspeed-operator/pulls \
-                -d '{"title":"[Do Not Merge] Test Konflux Bundle Update Snapshot $(params.snapshot)","body":"Do not merge!","head":"raptorsun:$(params.branch)","base":"main"}' )
+                -d '{"title":"[Do Not Merge] Test Konflux Bundle Update Snapshot $(params.snapshot)","body":"Do not merge!","head":"$(params.forkUser):$(params.forkBranch)","base":"$(params.sourceBranch)"}' )
               echo "Github response: \n $RESPONSE"
               jq -r '.html_url' <<< $RESPONSE | tee $(results.pull-request-url.path)
         results:
@@ -102,14 +140,20 @@ spec:
           - name: pull-request-url
             description: The URL of the created pull request
       params:
-        - name: gitUrl
-          value: $(params.gitUrl)
-        - name: branch
-          value: $(params.branch)
-        - name: snapshot
-          value: $(params.snapshot)
         - name: release
           value: $(params.release)
+        - name: snapshot
+          value: $(params.snapshot)
+        - name: forkGitUrl
+          value: $(params.forkGitUrl)
+        - name: forkBranch
+          value: $(params.forkBranch)
+        - name: forkUser
+          value: $(params.forkUser)
+        - name: sourceGitUrl
+          value: $(params.sourceGitUrl)
+        - name: sourceBranch
+          value: $(params.sourceBranch)
       workspaces:
         - name: source
   workspaces:
