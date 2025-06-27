@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
-  name: update-catalog-run-1
+  name: update-catalog-run-3
   namespace: crt-nshift-lightspeed-tenant
 spec:
   serviceAccountName: release-bot
@@ -19,9 +19,11 @@ spec:
       value: "ols-bundle-z8tgw"
     - name: release
       value: "crt-nshift-lightspeed-tenant/stable-ols-bundle-1.0.0-2"
-    - name: gitUrl
+    - name: releasePlan
+      value: "ols-bundle-release-plan"
+    - name: forkGitUrl
       value: "https://github.com/raptorsun/lightspeed-operator.git"
-    - name: branch
+    - name: forkBranch
       value: "fbc-update-1"
   workspaces:
     - name: source
