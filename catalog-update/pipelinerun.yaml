@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: update-catalog-run-1
+  namespace: crt-nshift-lightspeed-tenant
+spec:
+  serviceAccountName: release-bot
+  pipelineRef:
+    params:
+      - name: url
+        value: https://github.com/raptorsun/tekton-release-tool.git
+      - name: revision
+        value: main
+      - name: pathInRepo
+        value: catalog-update/pipeline.yaml
+    resolver: git
+  params:
+    - name: snapshot
+      value: "ols-bundle-z8tgw"
+    - name: release
+      value: "crt-nshift-lightspeed-tenant/stable-ols-bundle-1.0.0-2"
+    - name: gitUrl
+      value: "https://github.com/raptorsun/lightspeed-operator.git"
+    - name: branch
+      value: "fbc-update-1"
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
