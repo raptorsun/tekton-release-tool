@@ -102,7 +102,6 @@ spec:
               git remote add fork $(params.forkGitUrl)
           - name: git-commit-push
             image: quay.io/hasun/bundle-update:0.0.1
-            workingDir: /workspace/source
             env:
               - name: GITHUB_TOKEN
                 valueFrom:
@@ -146,10 +145,6 @@ spec:
           value: $(params.sourceGitUrl)
         - name: sourceBranch
           value: $(params.sourceBranch)
-      workspaces:
-        - name: source
-  workspaces:
-    - name: source
   results:
     - name: commit-id
       description: The commit ID where bundle is updated
