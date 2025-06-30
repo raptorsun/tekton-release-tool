@@ -85,7 +85,7 @@ spec:
               echo "Snapshot images: $SNAPSHOT_IMAGES"
               cd repo
               # back up the bundle element
-              jq '.[] | select(.name == "lightspeed-operator-bundle")' related_images.old.json > bundle.json
+              jq '.[] | select(.name == "lightspeed-operator-bundle")' related_images.json > bundle.json
               ./hack/snapshot_to_image_list.sh -s "$(params.snapshot)" -r stable -o related_images.json
               # restore the bundle element
               jq 'map(select(.name != "lightspeed-operator-bundle"))' related_images.json > tmp.json && mv tmp.json related_images.json
