@@ -65,7 +65,7 @@ spec:
             default: "main"
         steps:
           - name: git-clone
-            image: docker.io/raptorsun/bundle-update:0.0.1
+            image: quay.io/hasun/bundle-update:0.0.1
             script: |
               git clone --single-branch --branch $(params.sourceBranch) $(params.sourceGitUrl) repo
               cd repo
@@ -75,7 +75,7 @@ spec:
               - name: HOME
                 value: /workspace/source
           - name: update-file
-            image: docker.io/raptorsun/bundle-update:0.0.1
+            image: quay.io/hasun/bundle-update:0.0.1
             script: |
               set -e
               oc login --token=${KONFLUX_TOKEN} --server=https://api.stone-prd-rh01.pg1f.p1.openshiftapps.com:6443
@@ -95,7 +95,7 @@ spec:
               - name: HOME
                 value: /workspace/source
           - name: git-config
-            image: docker.io/raptorsun/bundle-update:0.0.1
+            image: quay.io/hasun/bundle-update:0.0.1
             script: |
               cd repo
               # todo: replace the email and name with the bot's email and name
@@ -107,7 +107,7 @@ spec:
               - name: HOME
                 value: /workspace/source
           - name: git-commit-push
-            image: docker.io/raptorsun/bundle-update:0.0.1
+            image: quay.io/hasun/bundle-update:0.0.1
             workingDir: /workspace/source
             env:
               - name: GITHUB_TOKEN
