@@ -94,6 +94,8 @@ spec:
                   secretKeyRef:
                     name: release-bot-konflux-token
                     key: konflux-token
+              - name: HOME 
+                value: /workspace
           - name: git-config
             image: quay.io/hasun/bundle-update:0.0.1
             workingDir: /workspace
