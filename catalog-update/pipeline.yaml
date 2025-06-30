@@ -71,10 +71,7 @@ spec:
               git clone --single-branch --branch $(params.sourceBranch) $(params.sourceGitUrl) repo
               cd repo
               git checkout -b $(params.forkBranch)
-            workingDir: /workspace/source
-            env:
-              - name: HOME
-                value: /workspace/source
+            workingDir: /workspace
           - name: update-catalog
             image: quay.io/hasun/catalog-update:0.0.1
             script: |
@@ -89,7 +86,7 @@ spec:
               ./hack/bundle_to_catalog.sh -b $(params.snapshot) -n stable,alpha -c lightspeed-catalog-4.18/index.yaml -m
               ./hack/bundle_to_catalog.sh -b $(params.snapshot) -n stable,alpha -c lightspeed-catalog-4.19/index.yaml -m
 
-            workingDir: /workspace/source
+            workingDir: /workspace
             env:
               - name: KONFLUX_TOKEN
                 valueFrom:
@@ -97,7 +94,7 @@ spec:
                     name: release-bot-konflux-token
                     key: konflux-token
               - name: HOME
-                value: /workspace/source
+                value: /workspace
           - name: git-config
             image: quay.io/hasun/catalog-update:0.0.1
             script: |
@@ -106,28 +103,23 @@ spec:
               git config user.email "hasun@redhat.com"
               git config user.name "Haoyu Sun's Bot"
               git remote add fork $(params.forkGitUrl)
-            workingDir: /workspace/source
-            env:
-              - name: HOME
-                value: /workspace/source
+            workingDir: /workspace
           - name: git-commit-push
             image: quay.io/hasun/catalog-update:0.0.1
-            workingDir: /workspace/source
+            workingDir: /workspace
             env:
               - name: GITHUB_TOKEN
                 valueFrom:
                   secretKeyRef:
                     name: release-bot-github-token
                     key: github-token
-              - name: HOME
-                value: /workspace/source
             script: |
               set -e
               cd repo
               git add lightspeed-catalog-4.15/index.yaml lightspeed-catalog-4.16/index.yaml lightspeed-catalog-4.17/index.yaml \
                 lightspeed-catalog-4.18/index.yaml lightspeed-catalog-4.19/index.yaml
               git commit -m "Update catalog with bundle snapshot $(params.snapshot)"
-              git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
+              git config credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
               git rev-parse HEAD | tee $(results.commit-id.path)
               git push --force fork $(params.forkBranch)
               # todo: change the PR title and body
@@ -162,10 +154,6 @@ spec:
           value: $(params.sourceBranch)
         - name: releasePlan
           value: $(params.releasePlan)
-      workspaces:
-        - name: source
-  workspaces:
-    - name: source
   results:
     - name: commit-id
       description: The commit ID where bundle is updated
