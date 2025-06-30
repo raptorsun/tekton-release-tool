@@ -70,10 +70,6 @@ spec:
               git clone --single-branch --branch $(params.sourceBranch) $(params.sourceGitUrl) repo
               cd repo
               git checkout -b $(params.forkBranch)
-            workingDir: /workspace/source
-            env:
-              - name: HOME
-                value: /workspace/source
           - name: update-file
             image: quay.io/hasun/bundle-update:0.0.1
             script: |
@@ -90,15 +86,12 @@ spec:
               # restore the bundle element
               jq 'map(select(.name != "lightspeed-operator-bundle"))' related_images.json > tmp.json && mv tmp.json related_images.json
               jq -s '.[0] + [.[1]]' related_images.json bundle.json > tmp.json && mv tmp.json related_images.json
-            workingDir: /workspace/source
             env:
               - name: KONFLUX_TOKEN
                 valueFrom:
                   secretKeyRef:
                     name: release-bot-konflux-token
                     key: konflux-token
-              - name: HOME
-                value: /workspace/source
           - name: git-config
             image: quay.io/hasun/bundle-update:0.0.1
             script: |
@@ -107,10 +100,6 @@ spec:
               git config user.email "hasun@redhat.com"
               git config user.name "Haoyu Sun's Bot"
               git remote add fork $(params.forkGitUrl)
-            workingDir: /workspace/source
-            env:
-              - name: HOME
-                value: /workspace/source
           - name: git-commit-push
             image: quay.io/hasun/bundle-update:0.0.1
             workingDir: /workspace/source
@@ -120,14 +109,12 @@ spec:
                   secretKeyRef:
                     name: release-bot-github-token
                     key: github-token
-              - name: HOME
-                value: /workspace/source
             script: |
               cd repo
               git add related_images.json
               git commit -m "Update related_images with snapshot $(params.snapshot)"
               git rev-parse HEAD | tee $(results.commit-id.path)
-              git config --global credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
+              git config credential.helper '!f() { sleep 1; echo "username=git"; echo "password=$GITHUB_TOKEN"; }; f'
               git push --force fork $(params.forkBranch)
               # todo: replace the PR title, body
               RESPONSE=$(curl -L \
